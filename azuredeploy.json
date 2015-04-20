@@ -16,7 +16,7 @@
         },
         "storageAccountName": {
             "type": "string",
-            "defaultValue": "uniquesparkstorage",
+            "defaultValue": "uniquesparkstoragev12",
             "metadata": {
                 "Description": "Unique namespace for the Storage Account where the Virtual Machine's disks will be placed"
             }
@@ -30,7 +30,7 @@
         },
         "virtualNetworkName": {
             "type": "string",
-            "defaultValue": "myVNET",
+            "defaultValue": "myVNETspark",
             "metadata": {
                 "Description": "The arbitrary name of the virtual network provisioned for the cluster"
             }

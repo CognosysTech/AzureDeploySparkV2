@@ -25,7 +25,7 @@
         },
         "storageAccountName": {
             "type": "string",
-            "defaultValue": "uniqueStorageAccountName",
+            "defaultValue": "uniquestoragejumpspark",
             "metadata": {
                 "Description": "Unique namespace for the Storage Account where the Virtual Machine's disks will be placed"
             }
