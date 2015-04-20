@@ -121,7 +121,7 @@
         "tshirtSizeS": {
             "numberOfInstances": 3,
 			"numberOfSlaves" : 0,
-            "vmSize": "Standard_A1"
+            "vmSize": "Standard_A2"
         },
         "tshirtSizeM": {
             "numberOfInstances": 6,
@@ -311,7 +311,7 @@
                     "fileUris": [
                         "[concat(variables('scriptUrl'), 'spark-cluster-install.sh')]"
                     ],
-                    "commandToExecute": "[concat('bash spark-cluster-install.sh')]"
+                    "commandToExecute": "[concat('bash spark-cluster-install.sh -k ','1.2.1')]"
                 }
             }
         },
@@ -331,7 +331,7 @@
                     "fileUris": [
                         "[concat(variables('scriptUrl'), 'spark-cluster-setup.sh')]"
                     ],
-                    "commandToExecute": "[concat('bash spark-cluster-setup.sh')]"
+                    "commandToExecute": "[concat('bash spark-cluster-setup.sh ', ' ')]"
                 }
             }
         }
