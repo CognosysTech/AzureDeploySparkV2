@@ -24,6 +24,13 @@ help()
     echo "-h view this help content"
 }
 
+log()
+{
+	# If you want to enable this logging add a un-comment the line below and add your account key 
+    	#curl -X POST -H "content-type:text/plain" --data-binary "$(date) | ${HOSTNAME} | $1" https://logs-01.loggly.com/inputs/[account-key]/tag/redis-extension,${HOSTNAME}
+	echo "$1"
+}
+
 echo "Begin execution of spark script extension on ${HOSTNAME}"
 
 if [ "${UID}" -ne 0 ];
@@ -33,22 +40,9 @@ then
     exit 3
 fi
 
-# TEMP FIX - Re-evaluate and remove when possible
-# This is an interim fix for hostname resolution in current VM
-grep -q "${HOSTNAME}" /etc/hosts
-if [ $? -eq $SUCCESS ];
-then
-  echo "${HOSTNAME}found in /etc/hosts"
-else
-  echo "${HOSTNAME} not found in /etc/hosts"
-  # Append it to the hsots file if not there
-  echo "127.0.0.1 $(hostname)" >> /etc/hosts
-  echo "hostname ${HOSTNAME} added to /etc/hosts"
-fi
-
 #Script Parameters
 SPK_VERSION="1.2.1"
-MASTER1SLAVE0="1"
+MASTER1SLAVE0="-1"
 
 #Loop through options passed
 while getopts :k:m:h optname; do
@@ -200,7 +194,7 @@ install_spark()
 	#=========================================================
 	#SPARK-DEFAULTS (ADD BELOW)
 	 
-	echo 'spark.master            spark://localhost:7077' >> spark-defaults.conf
+	echo 'spark.master            spark://10.0.0.10:7077' >> spark-defaults.conf
 	echo 'spark.executor.memory   512m' >> spark-defaults.conf
 	echo 'spark.eventLog.enabled  true' >> spark-defaults.conf
 	echo 'spark.serializer        org.apache.spark.serializer.KryoSerializer' >> spark-defaults.conf
@@ -210,7 +204,7 @@ install_spark()
 	#Time to start Apache Spark up
 
 	sudo su spark
-	rm ~/.ssh/id_rsa 
+	rm -f ~/.ssh/id_rsa 
 	ssh-keygen -q -t rsa -N '' -f ~/.ssh/id_rsa && cat ~/.ssh/id_rsa.pub >> ~/.ssh/authorized_keys
 
 	ssh localhost

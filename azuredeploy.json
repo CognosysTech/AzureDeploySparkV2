@@ -114,7 +114,7 @@
         "subnetRef": "[concat(variables('vnetID'),'/subnets/',parameters('subnetName'))]",
         "sourceImageName": "[concat('/',subscription().subscriptionId,'/services/images/',variables('vmSourceImageName'))]",
         "computerNamePrefix": "sparknode_",
-        "scriptUrl": "https://raw.githubusercontent.com/azurermtemplates/azurermtemplates/master/spark-on-ubuntu/",
+        "scriptUrl": "https://raw.githubusercontent.com/CognosysTech/AzureDeploySparkV2/master/",
         "templateUrl": "[variables('scriptUrl')]",
         "sharedTemplateName": "shared-resources",
         "jumpboxTemplateName": "jumpbox-resources-",
@@ -311,7 +311,7 @@
                     "fileUris": [
                         "[concat(variables('scriptUrl'), 'spark-cluster-install.sh')]"
                     ],
-                    "commandToExecute": "[concat('bash spark-cluster-install.sh -n ', parameters('sparkClusterName'), ' -v ', parameters('sparkVersion'))]"
+                    "commandToExecute": "[concat('bash spark-cluster-install.sh')]"
                 }
             }
         },
@@ -331,7 +331,7 @@
                     "fileUris": [
                         "[concat(variables('scriptUrl'), 'spark-cluster-setup.sh')]"
                     ],
-                    "commandToExecute": "[concat('bash spark-cluster-setup.sh -c ', variables('numberOfInstances'), ' -s ', variables('numberOfSlaves'), ' -p ', parameters('sparkNodeIPAddressPrefix'))]"
+                    "commandToExecute": "[concat('bash spark-cluster-setup.sh')]"
                 }
             }
         }

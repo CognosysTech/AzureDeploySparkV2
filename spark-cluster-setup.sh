@@ -16,5 +16,22 @@
 
 echo "Setup"
 
+# TEMP FIX - Re-evaluate and remove when possible
+# This is an interim fix for hostname resolution in current VM
+
+  echo "10.0.0.10 slave0" >> /etc/hosts
+  echo "10.0.0.11 slave1" >> /etc/hosts
+  echo "10.0.0.12 slave2" >> /etc/hosts
+
+cd /usr/local/spark/conf
+echo "slave0" >> slaves
+echo "slave1" >> slaves
+echo "slave2" >> slaves
+
+cd /usr/local/spark/sbin
+
+./start-master.sh
+./start-slaves.sh
+
 #========================= END ==================================
 
