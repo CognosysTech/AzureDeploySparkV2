@@ -16,7 +16,7 @@
         },
         "storageAccountName": {
             "type": "string",
-            "defaultValue": "uniqueStorageAccountName",
+            "defaultValue": "uniquesparkstorage",
             "metadata": {
                 "Description": "Unique namespace for the Storage Account where the Virtual Machine's disks will be placed"
             }
