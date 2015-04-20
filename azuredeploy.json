@@ -113,7 +113,7 @@
         "vnetID": "[resourceId('Microsoft.Network/virtualNetworks',parameters('virtualNetworkName'))]",
         "subnetRef": "[concat(variables('vnetID'),'/subnets/',parameters('subnetName'))]",
         "sourceImageName": "[concat('/',subscription().subscriptionId,'/services/images/',variables('vmSourceImageName'))]",
-        "computerNamePrefix": "sparknode_",
+        "computerNamePrefix": "sparknode",
         "scriptUrl": "https://raw.githubusercontent.com/CognosysTech/AzureDeploySparkV2/master/",
         "templateUrl": "[variables('scriptUrl')]",
         "sharedTemplateName": "shared-resources",
