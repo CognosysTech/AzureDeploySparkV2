@@ -40,5 +40,5 @@ NOTE: To access the individual Spark nodes, you need to use the publicly accessi
 - Health monitoring of the Spark instances is not currently enabled
 - SSH key is not yet implemented and the template currently takes a password for the admin user
 - Spark cluster is not enabled automatically (due to inability to compose a single list of private IP addresses of all instances from within the ARM template)
-- Spark version 3.0.0 or above is a requirement for the cluster (although the older versions can still be deployed without clustered configuration)
+- Spark version 1.2.1 or above is a requirement for the cluster (although the older versions can still be deployed without clustered configuration)
 - A static IP address will be assigned to each Spark node in order to work around the current limitation of not being able to dynamically compose a list of IP addresses from within the template (by default, the first node will be assigned the private IP of 10.0.0.10, the second node - 10.0.0.11, and so on)
