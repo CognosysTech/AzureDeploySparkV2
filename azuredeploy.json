@@ -119,19 +119,19 @@
         "sharedTemplateName": "shared-resources",
         "jumpboxTemplateName": "jumpbox-resources-",
         "tshirtSizeS": {
-            "numberOfInstances": 3,
+            "numberOfInstances": 2,
 			"numberOfSlaves" : 0,
-            "vmSize": "Standard_A2"
+            "vmSize": "Standard_A3"
         },
         "tshirtSizeM": {
             "numberOfInstances": 6,
 			"numberOfSlaves" : 1,
-            "vmSize": "Standard_A2"
+            "vmSize": "Standard_A4"
         },
         "tshirtSizeL": {
             "numberOfInstances": 9,
 			"numberOfSlaves" : 2,
-            "vmSize": "Standard_A3"
+            "vmSize": "Standard_A7"
         },
         "numberOfInstances": "[variables(concat('tshirtSize', parameters('tshirtSize'))).numberOfInstances]",
 		"numberOfSlaves": "[variables(concat('tshirtSize', parameters('tshirtSize'))).numberOfSlaves]",
