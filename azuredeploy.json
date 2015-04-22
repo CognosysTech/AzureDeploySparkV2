@@ -436,8 +436,6 @@
             "apiVersion": "2014-12-01-preview",
             "location": "[parameters('region')]",
             "dependsOn": [
-		"[concat('Microsoft.Compute/virtualMachines/', 'myvm', copyindex())]",
-                "[concat('Microsoft.Network/networkInterfaces/', 'nic', copyindex())]",
                 "virtualMachineExtensionsLoopMaster"
             ],
             "properties": {
