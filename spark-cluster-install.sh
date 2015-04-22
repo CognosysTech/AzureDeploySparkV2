@@ -40,9 +40,24 @@ then
     exit 3
 fi
 
+# TEMP FIX - Re-evaluate and remove when possible
+# This is an interim fix for hostname resolution in current VM
+grep -q "${HOSTNAME}" /etc/hosts
+if [ $? -eq $SUCCESS ];
+then
+  echo "${HOSTNAME}found in /etc/hosts"
+else
+  echo "${HOSTNAME} not found in /etc/hosts"
+  # Append it to the hsots file if not there
+  echo "127.0.0.1 $(hostname)" >> /etc/hosts
+  log "hostname ${HOSTNAME} added to /etc/hosts"
+fi
+
 #Script Parameters
 SPK_VERSION="1.2.1"
 MASTER1SLAVE0="-1"
+MASTERIP="10.0.0.10"
+NUMBEROFSLAVES="1"
 
 #Loop through options passed
 while getopts :k:m:h optname; do
@@ -53,6 +68,12 @@ while getopts :k:m:h optname; do
       ;;
     m)  #Master 1 Slave 0
       MASTER1SLAVE0=${OPTARG}
+      ;;
+    d)  #Master IP
+      MASTERIP=${OPTARG}
+      ;;
+    s)  #Number of Slaves
+      NUMBEROFSLAVES=${OPTARG}
       ;;
     h)  #show help
       help
@@ -163,9 +184,8 @@ install_spark()
 #	========================================================
 #	echo 'SPARK-ENV.SH (ADD BELOW)' >> spark-env.sh
 
-# Make sure to put your change SPARK_PUBLIC_DNS=“PUBLIC IP“ to your Public IP
+# Make sure to put your change SPARK_PUBLIC_DNS="PUBLIC IP" to your Public IP
 	 
-	echo 'export SPARK_WORKER_CORES="2"' >> spark-env.sh
 	echo 'export SPARK_WORKER_MEMORY="1g"' >> spark-env.sh
 	echo 'export SPARK_DRIVER_MEMORY="1g"' >> spark-env.sh
 	echo 'export SPARK_REPL_MEM="2g"' >> spark-env.sh
@@ -184,8 +204,8 @@ install_spark()
 	echo 'export SPARK_REPL_OPTS=" -Djava.io.tmpdir=/srv/spark/tmp/repl/\$USER "' >> spark-env.sh
 	echo 'export SPARK_APP_OPTS=" -Djava.io.tmpdir=/srv/spark/tmp/app/\$USER "' >> spark-env.sh
 	echo 'export PYSPARK_PYTHON="/usr/bin/python"' >> spark-env.sh
-	echo 'SPARK_PUBLIC_DNS="PUBLIC IP"' >> spark-env.sh
-	echo 'export SPARK_WORKER_INSTANCES=2' >> spark-env.sh
+	echo 'SPARK_PUBLIC_DNS="${MASTERIP}"' >> spark-env.sh
+	echo 'export SPARK_WORKER_INSTANCES=${NUMBEROFSLAVES}' >> spark-env.sh
 	#=========================================================
 	 
 	cp -p spark-defaults.conf.template spark-defaults.conf
@@ -194,7 +214,7 @@ install_spark()
 	#=========================================================
 	#SPARK-DEFAULTS (ADD BELOW)
 	 
-	echo 'spark.master            spark://10.0.0.10:7077' >> spark-defaults.conf
+	echo 'spark.master            spark://${MASTERIP}:7077' >> spark-defaults.conf
 	echo 'spark.executor.memory   512m' >> spark-defaults.conf
 	echo 'spark.eventLog.enabled  true' >> spark-defaults.conf
 	echo 'spark.serializer        org.apache.spark.serializer.KryoSerializer' >> spark-defaults.conf
@@ -209,13 +229,13 @@ install_spark()
 
 	ssh localhost
  
-	cd /usr/local/spark/sbin
-	if [ ${MASTER1SLAVE0} -eq "1" ];
-	    then
-		./start-master.sh
-	    else
-		./start-slaves.sh
-	fi
+	#cd /usr/local/spark/sbin
+	#if [ ${MASTER1SLAVE0} -eq "1" ];
+	#    then
+	#	./start-master.sh
+	#    else
+	#	./start-slaves.sh
+	#fi
 	#Note to stop processes do:
 	 
 	#./stop-slaves.sh

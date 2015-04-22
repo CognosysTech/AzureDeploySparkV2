@@ -29,7 +29,7 @@ The example expects the following parameters:
 Topology
 --------
 
-The deployment topology is comprised of _numberOfInstances_ nodes running in the cluster mode.
+The deployment topology is comprised of _numberOfMasterInstances_ nodes running in the cluster mode.
 The AOF persistence is enabled by default, whereas the RDB persistence is tuned to perform less-frequent dumps (once every 60 minutes).
 In addition, some critical memory- and network-specific optimizations are applied to ensure the optimal performance and throughput.
 

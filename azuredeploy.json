@@ -83,6 +83,13 @@
                 "Description": "The IP address prefix that will be used for constructing a static private IP address for each node in the cluster"
             }
         },
+        "sparkSlaveNodeIPAddressPrefix": {
+            "type": "string",
+            "defaultValue": "10.0.0.3",
+            "metadata": {
+                "Description": "The IP address prefix that will be used for constructing a static private IP address for each node in the cluster"
+            }
+        },
         "jumpbox": {
             "type": "string",
             "defaultValue": "enabled",
@@ -119,22 +126,22 @@
         "sharedTemplateName": "shared-resources",
         "jumpboxTemplateName": "jumpbox-resources-",
         "tshirtSizeS": {
-            "numberOfInstances": 2,
-			"numberOfSlaves" : 0,
+            "numberOfMasterInstances": 1,
+			"numberOfSlavesInstances" : 1,
             "vmSize": "Standard_A3"
         },
         "tshirtSizeM": {
-            "numberOfInstances": 6,
-			"numberOfSlaves" : 1,
+            "numberOfMasterInstances": 1,
+			"numberOfSlavesInstances" : 4,
             "vmSize": "Standard_A4"
         },
         "tshirtSizeL": {
-            "numberOfInstances": 9,
-			"numberOfSlaves" : 2,
+            "numberOfMasterInstances": 1,
+			"numberOfSlavesInstances" : 6,
             "vmSize": "Standard_A7"
         },
-        "numberOfInstances": "[variables(concat('tshirtSize', parameters('tshirtSize'))).numberOfInstances]",
-		"numberOfSlaves": "[variables(concat('tshirtSize', parameters('tshirtSize'))).numberOfSlaves]",
+        "numberOfMasterInstances": "[variables(concat('tshirtSize', parameters('tshirtSize'))).numberOfMasterInstances]",
+		"numberOfSlavesInstances": "[variables(concat('tshirtSize', parameters('tshirtSize'))).numberOfSlavesInstances]",
         "vmSize": "[variables(concat('tshirtSize', parameters('tshirtSize'))).vmSize]"
     },
     "resources": [
@@ -215,7 +222,7 @@
             "location": "[parameters('region')]",
             "copy": {
                 "name": "nicLoop",
-                "count": "[variables('numberOfInstances')]"
+                "count": "[variables('numberOfMasterInstances')]"
             },
             "dependsOn": [
                 "[concat('Microsoft.Resources/deployments/', 'shared-resources')]"
@@ -235,14 +242,41 @@
                 ]
             }
         },
+	{
+            "apiVersion": "2014-12-01-preview",
+            "type": "Microsoft.Network/networkInterfaces",
+            "name": "[concat('nicsl', copyindex())]",
+            "location": "[parameters('region')]",
+            "copy": {
+                "name": "nicslLoop",
+                "count": "[variables('numberOfSlavesInstances')]"
+            },
+            "dependsOn": [
+                "[concat('Microsoft.Resources/deployments/', 'shared-resources')]"
+            ],
+            "properties": {
+                "ipConfigurations": [
+                    {
+                        "name": "ipconfig1",
+                        "properties": {
+                            "privateIPAllocationMethod": "Static",
+                            "privateIPAddress": "[concat(parameters('sparkSlaveNodeIPAddressPrefix'), copyindex())]",
+                            "subnet": {
+                                "id": "[variables('subnetRef')]"
+                            }
+                        }
+                    }
+                ]
+            }
+	},
         {
             "apiVersion": "2014-12-01-preview",
             "type": "Microsoft.Compute/virtualMachines",
             "name": "[concat('myvm', copyindex())]",
             "location": "[parameters('region')]",
             "copy": {
-                "name": "virtualMachineLoop",
-                "count": "[variables('numberOfInstances')]"
+                "name": "virtualMachineLoopMaster",
+                "count": "[variables('numberOfMasterInstances')]"
             },
             "dependsOn": [
                 "[concat('Microsoft.Resources/deployments/', 'shared-resources')]",
@@ -290,14 +324,70 @@
                 }
             }
         },
+	{
+            "apiVersion": "2014-12-01-preview",
+            "type": "Microsoft.Compute/virtualMachines",
+            "name": "[concat('myvmsl', copyindex())]",
+            "location": "[parameters('region')]",
+            "copy": {
+                "name": "virtualMachineLoop",
+                "count": "[variables('numberOfSlavesInstances')]"
+            },
+            "dependsOn": [
+                "[concat('Microsoft.Resources/deployments/', 'shared-resources')]",
+                "[concat('Microsoft.Network/networkInterfaces/', 'nicsl', copyindex())]",
+		"virtualMachineLoopMaster"
+            ],
+            "properties": {
+                "availabilitySet": {
+                    "id": "[resourceId('Microsoft.Compute/availabilitySets', 'sparkCluserAS')]"
+                },
+                "hardwareProfile": {
+                    "vmSize": "[variables('vmSize')]",
+                    "platformGuestAgent": "true"
+                },
+                "osProfile": {
+                    "computername": "[concat(variables('computerNamePrefix'),'sl', copyIndex())]",
+                    "adminUsername": "[parameters('adminUsername')]",
+                    "adminPassword": "[parameters('adminPassword')]",
+                    "linuxOperatingSystemProfile": {
+                        "disableSshPasswordAuthentication": "false"
+                    }
+                },
+                "storageProfile": {
+                    "sourceImage": {
+                        "id": "[variables('sourceImageName')]"
+                    },
+                    "dataDisks": [
+                        {
+                            "name": "datadisk1",
+                            "diskSizeGB": "[parameters('dataDiskSize')]",
+                            "lun": 0,
+                            "vhd": {
+                                "Uri": "[concat('https://',parameters('storageAccountName'),'.blob.core.windows.net/',variables('vmStorageAccountContainerName'),'/','myvm','dataDisk', copyindex() ,'.vhd')]"
+                            }
+                        }
+                    ],
+
+                    "destinationVhdsContainer": "[concat('https://',parameters('storageAccountName'),'.blob.core.windows.net/',variables('vmStorageAccountContainerName'),'/')]"
+                },
+                "networkProfile": {
+                    "networkInterfaces": [
+                        {
+                            "id": "[resourceId('Microsoft.Network/networkInterfaces',concat('nicsl', copyindex()))]"
+                        }
+                    ]
+                }
+            }
+	},
         {
             "type": "Microsoft.Compute/virtualMachines/extensions",
-            "name": "[concat('myvm', copyindex(), '/installspark')]",
+            "name": "[concat('myvm', copyindex(), '/installsparkmaster')]",
             "apiVersion": "2014-12-01-preview",
             "location": "[parameters('region')]",
             "copy": {
-                "name": "virtualMachineExtensionsLoop",
-                "count": "[variables('numberOfInstances')]"
+                "name": "virtualMachineExtensionsLoopMaster",
+                "count": "[variables('numberOfMasterInstances')]"
             },
             "dependsOn": [
                 "[concat('Microsoft.Compute/virtualMachines/', 'myvm', copyindex())]",
@@ -311,17 +401,42 @@
                     "fileUris": [
                         "[concat(variables('scriptUrl'), 'spark-cluster-install.sh')]"
                     ],
-                    "commandToExecute": "[concat('bash spark-cluster-install.sh -k ','1.2.1')]"
+                    "commandToExecute": "[concat('bash spark-cluster-install.sh -k ',' 1.2.1 ',' -d ', reference('nic0').ipConfigurations[0].properties.privateIPAddress),' -s ',variables('numberOfSlavesInstances')]"
                 }
             }
         },
+	{
+            "type": "Microsoft.Compute/virtualMachines/extensions",
+            "name": "[concat('myvmsl', copyindex(), '/installsparkslave')]",
+            "apiVersion": "2014-12-01-preview",
+            "location": "[parameters('region')]",
+            "copy": {
+                "name": "virtualMachineExtensionsLoopSlave",
+                "count": "[variables('numberOfSlavesInstances')]"
+            },
+            "dependsOn": [
+                "[concat('Microsoft.Compute/virtualMachines/', 'myvmsl', copyindex())]",
+                "[concat('Microsoft.Network/networkInterfaces/', 'nicsl', copyindex())]"
+            ],
+            "properties": {
+                "publisher": "Microsoft.OSTCExtensions",
+                "type": "CustomScriptForLinux",
+                "typeHandlerVersion": "1.2",
+                "settings": {
+                    "fileUris": [
+                        "[concat(variables('scriptUrl'), 'spark-cluster-install.sh')]"
+                    ],
+                    "commandToExecute": "[concat('bash spark-cluster-install.sh -k ','1.2.1')]"
+                }
+            }
+	},
         {
             "type": "Microsoft.Compute/virtualMachines/extensions",
-            "name": "[concat('myvm0', '/setupcluster')]",
+            "name": "[concat('myvm0', '/setupclustermaster')]",
             "apiVersion": "2014-12-01-preview",
             "location": "[parameters('region')]",
             "dependsOn": [
-                "virtualMachineExtensionsLoop"
+                "virtualMachineExtensionsLoopMaster"
             ],
             "properties": {
                 "publisher": "Microsoft.OSTCExtensions",
@@ -331,9 +446,37 @@
                     "fileUris": [
                         "[concat(variables('scriptUrl'), 'spark-cluster-setup.sh')]"
                     ],
-                    "commandToExecute": "[concat('bash spark-cluster-setup.sh ', ' ')]"
+                    "commandToExecute": "[concat('bash spark-cluster-setup.sh -m ', ' 1 ')]"
                 }
             }
-        }
+        },
+	{
+            "type": "Microsoft.Compute/virtualMachines/extensions",
+            "name": "[concat('myvmsl', copyindex(), '/setupsparkslave')]",
+            "apiVersion": "2014-12-01-preview",
+            "location": "[parameters('region')]",
+            "copy": {
+                "name": "virtualMachineExtensionsLoopSlave",
+                "count": "[variables('numberOfSlavesInstances')]"
+            },
+            "dependsOn": [
+                "[concat('Microsoft.Compute/virtualMachines/', 'myvmsl', copyindex())]",
+                "[concat('Microsoft.Network/networkInterfaces/', 'nicsl', copyindex())]",
+		"[concat('Microsoft.Compute/virtualMachines/extensions/', 'myvm0', '/setupclustermaster')]",
+		"virtualMachineExtensionsLoopSlave",
+		"[concat('Microsoft.Compute/virtualMachines/extensions/', 'myvmsl', copyindex())]"
+            ],
+            "properties": {
+                "publisher": "Microsoft.OSTCExtensions",
+                "type": "CustomScriptForLinux",
+                "typeHandlerVersion": "1.2",
+                "settings": {
+                    "fileUris": [
+                        "[concat(variables('scriptUrl'), 'spark-cluster-install.sh')]"
+                    ],
+                    "commandToExecute": "[concat('bash spark-cluster-install.sh -m ',' 0 ')]"
+                }
+            }
+	}
     ]
 }
