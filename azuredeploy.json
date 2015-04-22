@@ -401,7 +401,7 @@
                     "fileUris": [
                         "[concat(variables('scriptUrl'), 'spark-cluster-install.sh')]"
                     ],
-                    "commandToExecute": "[concat('bash spark-cluster-install.sh -k ',' 1.2.1 ',' -d ', reference('nic0').ipConfigurations[0].properties.privateIPAddress),' -s ',variables('numberOfSlavesInstances')]"
+                    "commandToExecute": "[concat('bash spark-cluster-install.sh -k ',' 1.2.1 ',' -d ', reference('nic0').ipConfigurations[0].properties.privateIPAddress,' -s ',variables('numberOfSlavesInstances'))]"
                 }
             }
         },
