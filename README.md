@@ -29,7 +29,7 @@ The example expects the following parameters:
 Topology
 --------
 
-The deployment topology is comprised of Master and Slave Instance nodes running in the cluster mode.
+The deployment topology is comprised of Master and Slave Instance nodes running in the cluster mode. This is standard configuration as per Spark official documentation with one master.
 
 NOTE: To access the individual Spark nodes, you need to use the publicly accessible jumpbox VM and ssh from it into the VM instances running Spark.
 
