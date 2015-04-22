@@ -60,7 +60,7 @@ MASTERIP="10.0.0.10"
 NUMBEROFSLAVES="1"
 
 #Loop through options passed
-while getopts :k:m:h optname; do
+while getopts :k:m:d:s:h optname; do
     echo "Option $optname set with value ${OPTARG}"
   case $optname in
     k)  #spark version
