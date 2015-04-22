@@ -73,7 +73,7 @@ done
 
 cd /usr/local/spark/sbin
 
-if [ ${ZOOKEEPER1KAFKA0} -eq "1" ];
+if [ ${MASTER1SLAVE0} -eq "1" ];
 then
 	#
 	#Start Master
