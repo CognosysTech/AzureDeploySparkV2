@@ -432,7 +432,7 @@
 	},
         {
             "type": "Microsoft.Compute/virtualMachines/extensions",
-            "name": "[concat('myvm0', '/setupclustermaster')]",
+            "name": "virtualMachineExtensionsSetupMaster",
             "apiVersion": "2014-12-01-preview",
             "location": "[parameters('region')]",
             "dependsOn": [
@@ -462,9 +462,8 @@
             "dependsOn": [
                 "[concat('Microsoft.Compute/virtualMachines/', 'myvmsl', copyindex())]",
                 "[concat('Microsoft.Network/networkInterfaces/', 'nicsl', copyindex())]",
-		"[concat('Microsoft.Compute/virtualMachines/extensions/', 'myvm0', '/setupclustermaster')]",
 		"virtualMachineExtensionsLoopSlave",
-		"[concat('Microsoft.Compute/virtualMachines/extensions/', 'myvmsl', copyindex())]"
+		"virtualMachineExtensionsSetupMaster"
             ],
             "properties": {
                 "publisher": "Microsoft.OSTCExtensions",
