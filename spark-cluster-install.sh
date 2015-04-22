@@ -122,24 +122,21 @@ install_spark()
 	 
 	cd /usr/local/azurespark/
 	 
-	wget http://mirror.tcpdiag.net/apache/spark/spark-1.2.1/spark-1.2.1.tgz
-	 
-	gunzip -c spark-1.2.1.tgz | tar -xvf -
-	
-	mv spark-1.2.1 ../
-
-	cd ../spark-1.2.1/
-	
+#	wget http://mirror.tcpdiag.net/apache/spark/spark-1.2.1/spark-1.2.1.tgz
+#	gunzip -c spark-1.2.1.tgz | tar -xvf -
+#	mv spark-1.2.1 ../
+#	cd ../spark-1.2.1/	
 	# this will take quite a while
-	sudo sbt/sbt assembly 2>&1 1>buildlog.txt
-	 
+#	sudo sbt/sbt assembly 2>&1 1>buildlog.txt
+	
+	wget http://mirror.tcpdiag.net/apache/spark/spark-1.2.1/spark-1.2.1-bin-hadoop1.tgz  
+	echo "Unpacking Spark"
+	tar xvzf spark-*.tgz > /tmp/spark-ec2_spark.log
+	rm spark-*.tgz
+	mv spark-1.2.1-bin-hadoop1 ../
 	cd ..
-	 
-	#sudo cp -Rp spark-1.2.1 /usr/local/
-	 
 	cd /usr/local/
-	 
-	sudo ln -s spark-1.2.1 spark
+	sudo ln -s spark-1.2.1-bin-hadoop1 spark
 
 #	Third create a spark user with proper privileges and ssh keys.
 
@@ -155,7 +152,7 @@ install_spark()
 	 
 	sudo chown -R spark:spark /usr/local/spark/
 	
-	# setting passwordless ssh for root also remove later
+# setting passwordless ssh for root also remove later
         rm -f ~/.ssh/id_rsa 
 	ssh-keygen -q -t rsa -N '' -f ~/.ssh/id_rsa && cat ~/.ssh/id_rsa.pub >> ~/.ssh/authorized_keys
 
@@ -174,7 +171,6 @@ install_spark()
 #	Fifth let’s do a quick test
 #	cd /usr/local/spark	 
 #	bin/run-example SparkPi 10
-
 #	Now lets adjust some Spark configuration files
 
 	cd /usr/local/spark/conf/
@@ -204,10 +200,12 @@ install_spark()
 	echo 'export SPARK_REPL_OPTS=" -Djava.io.tmpdir=/srv/spark/tmp/repl/\$USER "' >> spark-env.sh
 	echo 'export SPARK_APP_OPTS=" -Djava.io.tmpdir=/srv/spark/tmp/app/\$USER "' >> spark-env.sh
 	echo 'export PYSPARK_PYTHON="/usr/bin/python"' >> spark-env.sh
-	echo 'SPARK_PUBLIC_DNS="${MASTERIP}"' >> spark-env.sh
+	echo 'export SPARK_MASTER_IP="${MASTERIP}"' >> spark-env.sh
+	echo 'export SPARK_MASTER_PORT=7077' >> spark-env.sh
+	echo 'export SPARK_PUBLIC_DNS="${MASTERIP}"' >> spark-env.sh
 	echo 'export SPARK_WORKER_INSTANCES=${NUMBEROFSLAVES}' >> spark-env.sh
 	#=========================================================
-	 
+
 	cp -p spark-defaults.conf.template spark-defaults.conf
 	touch spark-defaults.conf
 	 
@@ -229,14 +227,15 @@ install_spark()
 
 	ssh localhost
  
-	#cd /usr/local/spark/sbin
-	#if [ ${MASTER1SLAVE0} -eq "1" ];
-	#    then
-	#	./start-master.sh
-	#    else
-	#	./start-slaves.sh
-	#fi
-	#Note to stop processes do:
+	cd /usr/local/spark/sbin
+	if [ ${MASTER1SLAVE0} -eq "1" ];
+	    then
+		./start-master.sh
+	    else
+		./start-slaves.sh
+	fi
+
+#Note to stop processes do:
 	 
 	#./stop-slaves.sh
 	 

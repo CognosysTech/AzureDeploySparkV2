@@ -121,24 +121,24 @@
         "subnetRef": "[concat(variables('vnetID'),'/subnets/',parameters('subnetName'))]",
         "sourceImageName": "[concat('/',subscription().subscriptionId,'/services/images/',variables('vmSourceImageName'))]",
         "computerNamePrefix": "sparknode",
-        "scriptUrl": "https://raw.githubusercontent.com/CognosysTech/AzureDeploySparkV2/master/",
+        "scriptUrl": "https://raw.githubusercontent.com/CognosysTech/AzureDeploySparkV3/master/",
         "templateUrl": "[variables('scriptUrl')]",
         "sharedTemplateName": "shared-resources",
         "jumpboxTemplateName": "jumpbox-resources-",
         "tshirtSizeS": {
             "numberOfMasterInstances": 1,
 			"numberOfSlavesInstances" : 1,
-            "vmSize": "Standard_A4"
+            "vmSize": "Standard_A2"
         },
         "tshirtSizeM": {
             "numberOfMasterInstances": 1,
 			"numberOfSlavesInstances" : 4,
-            "vmSize": "Standard_A7"
+            "vmSize": "Standard_A4"
         },
         "tshirtSizeL": {
             "numberOfMasterInstances": 1,
 			"numberOfSlavesInstances" : 6,
-            "vmSize": "Standard_D13"
+            "vmSize": "Standard_A7"
         },
         "numberOfMasterInstances": "[variables(concat('tshirtSize', parameters('tshirtSize'))).numberOfMasterInstances]",
 		"numberOfSlavesInstances": "[variables(concat('tshirtSize', parameters('tshirtSize'))).numberOfSlavesInstances]",
@@ -215,6 +215,15 @@
                 }
             }
         },
+	{
+            "apiVersion": "2014-12-01-preview",
+            "type": "Microsoft.Network/publicIPAddresses",
+            "name": "publicIPmaster",
+            "location": "[parameters('region')]",
+            "properties": {
+                "publicIPAllocationMethod": "Dynamic"
+            }
+        },
         {
             "apiVersion": "2014-12-01-preview",
             "type": "Microsoft.Network/networkInterfaces",
@@ -225,7 +234,8 @@
                 "count": "[variables('numberOfMasterInstances')]"
             },
             "dependsOn": [
-                "[concat('Microsoft.Resources/deployments/', 'shared-resources')]"
+                "[concat('Microsoft.Resources/deployments/', 'shared-resources')]",
+		 "[concat('Microsoft.Network/publicIPAddresses/', 'publicIPmaster')]"
             ],
             "properties": {
                 "ipConfigurations": [
@@ -234,6 +244,9 @@
                         "properties": {
                             "privateIPAllocationMethod": "Static",
                             "privateIPAddress": "[concat(parameters('sparkNodeIPAddressPrefix'), copyindex())]",
+			    "publicIPAddress": {
+                                "id": "[resourceId('Microsoft.Network/publicIPAddresses','publicIPmaster')]"
+                            },
                             "subnet": {
                                 "id": "[variables('subnetRef')]"
                             }
@@ -320,6 +333,15 @@
                         {
                             "id": "[resourceId('Microsoft.Network/networkInterfaces',concat('nic', copyindex()))]"
                         }
+                    ],
+                    "inputEndpoints": [
+                        {
+                            "enableDirectServerReturn": "False",
+                            "endpointName": "webportal",
+                            "privatePort": 8080,
+                            "publicPort": 8080,
+                            "protocol": "tcp"
+                        }
                     ]
                 }
             }
@@ -401,7 +423,7 @@
                     "fileUris": [
                         "[concat(variables('scriptUrl'), 'spark-cluster-install.sh')]"
                     ],
-                    "commandToExecute": "[concat('bash spark-cluster-install.sh -k ',' 1.2.1 ',' -d ', reference('nic0').ipConfigurations[0].properties.privateIPAddress,' -s ',variables('numberOfSlavesInstances'))]"
+                    "commandToExecute": "[concat('bash spark-cluster-install.sh -k ',' 1.2.1 ',' -d ', reference('nic0').ipConfigurations[0].properties.privateIPAddress,' -s ',variables('numberOfSlavesInstances'),' -m ', ' 1 ')]"
                 }
             }
         },
@@ -426,53 +448,7 @@
                     "fileUris": [
                         "[concat(variables('scriptUrl'), 'spark-cluster-install.sh')]"
                     ],
-                    "commandToExecute": "[concat('bash spark-cluster-install.sh -k ','1.2.1')]"
-                }
-            }
-	},
-        {
-	    "type": "Microsoft.Compute/virtualMachines/extensions",
-            "name": "[concat('myvm0', '/setupcluster')]",
-            "apiVersion": "2014-12-01-preview",
-            "location": "[parameters('region')]",
-            "dependsOn": [
-                "virtualMachineExtensionsLoopMaster"
-            ],
-            "properties": {
-                "publisher": "Microsoft.OSTCExtensions",
-                "type": "CustomScriptForLinux",
-                "typeHandlerVersion": "1.2",
-                "settings": {
-                    "fileUris": [
-                        "[concat(variables('scriptUrl'), 'spark-cluster-setup.sh')]"
-                    ],
-                    "commandToExecute": "[concat('bash spark-cluster-setup.sh -m ', ' 1 ')]"
-                }
-            }
-        },
-	{
-            "type": "Microsoft.Compute/virtualMachines/extensions",
-            "name": "[concat('myvmsl', copyindex(), '/setupsparkslave')]",
-            "apiVersion": "2014-12-01-preview",
-            "location": "[parameters('region')]",
-            "copy": {
-                "name": "virtualMachineExtensionsSetupSlave",
-                "count": "[variables('numberOfSlavesInstances')]"
-            },
-            "dependsOn": [
-                "[concat('Microsoft.Compute/virtualMachines/', 'myvmsl', copyindex())]",
-                "[concat('Microsoft.Network/networkInterfaces/', 'nicsl', copyindex())]",
-		"virtualMachineExtensionsLoopSlave"
-            ],
-            "properties": {
-                "publisher": "Microsoft.OSTCExtensions",
-                "type": "CustomScriptForLinux",
-                "typeHandlerVersion": "1.2",
-                "settings": {
-                    "fileUris": [
-                        "[concat(variables('scriptUrl'), 'spark-cluster-setup.sh')]"
-                    ],
-                    "commandToExecute": "[concat('bash spark-cluster-setup.sh -m ',' 0 ')]"
+                    "commandToExecute": "[concat('bash spark-cluster-install.sh -k ','1.2.1',' -m ', ' 0 ')]"
                 }
             }
 	}

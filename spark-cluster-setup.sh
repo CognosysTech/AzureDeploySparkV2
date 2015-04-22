@@ -78,12 +78,12 @@ then
 	#
 	#Start Master
 	#-----------------------
-	./start-master.sh &
+	./start-master.sh
 else
 	#
 	#Start Slave
 	#-----------------------
-	./start-slave.sh &
+	./start-slave.sh
 fi
 
 #========================= END ==================================
