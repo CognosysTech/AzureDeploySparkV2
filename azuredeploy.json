@@ -360,7 +360,7 @@
                     },
                     "dataDisks": [
                         {
-                            "name": "datadisk1",
+                            "name": "datadisksl1",
                             "diskSizeGB": "[parameters('dataDiskSize')]",
                             "lun": 0,
                             "vhd": {
