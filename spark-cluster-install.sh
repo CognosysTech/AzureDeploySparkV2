@@ -156,7 +156,7 @@ install_spark()
 	sudo chown -R spark:spark /usr/local/spark/
 	
 	# setting passwordless ssh for root also remove later
-        rm ~/.ssh/id_rsa 
+        rm -f ~/.ssh/id_rsa 
 	ssh-keygen -q -t rsa -N '' -f ~/.ssh/id_rsa && cat ~/.ssh/id_rsa.pub >> ~/.ssh/authorized_keys
 
 #	ssh-keygen -t rsa -P ""
