@@ -131,7 +131,7 @@ install_spark()
 	cd ../spark-1.2.1/
 	
 	# this will take quite a while
-	sudo sbt/sbt assembly
+	sudo sbt/sbt assembly 2>&1 1>buildlog.txt
 	 
 	cd ..
 	 
